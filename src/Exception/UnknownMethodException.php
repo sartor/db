@@ -4,6 +4,11 @@ declare(strict_types=1);
 
 namespace Yiisoft\Db\Exception;
 
-class UnknownMethodException extends \BadMethodCallException
+use BadMethodCallException;
+
+/**
+ * Represents an exception caused by calling an unknown method.
+ */
+final class UnknownMethodException extends BadMethodCallException
 {
 }

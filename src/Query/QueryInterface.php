@@ -5,48 +5,53 @@ declare(strict_types=1);
 namespace Yiisoft\Db\Query;
 
 use Closure;
-use Stringable;
 use Throwable;
-use Yiisoft\Cache\Dependency\Dependency;
 use Yiisoft\Db\Command\CommandInterface;
+use Yiisoft\Db\Connection\ConnectionInterface;
 use Yiisoft\Db\Exception\Exception;
 use Yiisoft\Db\Exception\InvalidArgumentException;
 use Yiisoft\Db\Exception\InvalidConfigException;
-use Yiisoft\Db\Expression\Expression;
+use Yiisoft\Db\Exception\NotSupportedException;
 use Yiisoft\Db\Expression\ExpressionInterface;
 use Yiisoft\Db\QueryBuilder\QueryBuilderInterface;
 
 /**
- * The `QueryInterface` defines the minimum set of methods to be implemented by a database query.
+ * Defines several methods for building and executing database queries, including methods for selecting
+ * data, inserting data, updating data, and deleting data.
  *
- * The default implementation of this interface is provided by {@see QueryTrait}.
+ * It also defines methods for specifying the conditions for a query, as well as methods for pagination and sorting.
  *
- * It has support for getting {@see one} instance or {@see all}.
- * Allows pagination via {@see limit} and {@see offset}.
- * Sorting is supported via {@see orderBy} and items can be limited to match some conditions using {@see where}.
+ * It has support for getting {@see one()} instance or {@see all()}.
+ *
+ * Allows pagination via {@see limit()} and {@see offset()}.
+ *
+ * Sorting is supported via {@see orderBy()} and items can be limited to match some conditions using {@see where()}.
+ *
+ * @psalm-import-type ParamsType from ConnectionInterface
+ * @psalm-import-type SelectValue from QueryPartsInterface
  */
-interface QueryInterface extends ExpressionInterface, QueryPartsInterface, QueryFunctionsInterface, Stringable
+interface QueryInterface extends ExpressionInterface, QueryPartsInterface, QueryFunctionsInterface
 {
     /**
-     * Adds additional parameters to be bound to the query.
+     * Adds more parameters to bind to the query.
      *
-     * @param array $params list of query parameter values indexed by parameter placeholders.
+     * @param array $params The list of query parameter values indexed by parameter placeholders.
      * For example, `[':name' => 'Dan', ':age' => 31]`.
      *
-     * @return $this the query object itself.
+     * @psalm-param ParamsType $params
      *
-     * {@see params()}
+     * @see params()
      */
-    public function addParams(array $params): self;
+    public function addParams(array $params): static;
 
     /**
      * Executes the query and returns all results as an array.
      *
-     * If this parameter is not given, the `db` application component will be used.
+     * @throws Exception
+     * @throws InvalidConfigException
+     * @throws Throwable
      *
-     * @throws Exception|InvalidConfigException|Throwable
-     *
-     * @return array the query results. If the query results in nothing, an empty array will be returned.
+     * @return array[] The query results. If the query results in nothing, it returns an empty array.
      */
     public function all(): array;
 
@@ -55,211 +60,247 @@ interface QueryInterface extends ExpressionInterface, QueryPartsInterface, Query
      *
      * A batch query supports fetching data in batches, which can keep the memory usage under a limit.
      *
-     * This method will return a {@see BatchQueryResultInterface} object which implements the {@see Iterator} interface and can
-     * be traversed to retrieve the data in batches.
+     * This method will return a {@see BatchQueryResultInterface} object which implements the {@see \Iterator} interface
+     * and can be traversed to retrieve the data in batches.
      *
      * For example,
      *
      * ```php
      * $query = (new Query)->from('user');
+     *
      * foreach ($query->batch() as $rows) {
      *     // $rows is an array of 100 or fewer rows from user table
      * }
      * ```
      *
-     * @param int $batchSize the number of records to be fetched in each batch.
+     * @param int $batchSize The number of records to fetch in each batch.
      *
-     * @return BatchQueryResultInterface the batch query result. It implements the {@see Iterator} interface and can be
+     * @return BatchQueryResultInterface The batch query result. It implements the {@see \Iterator} interface and can be
      * traversed to retrieve the data in batches.
      */
     public function batch(int $batchSize = 100): BatchQueryResultInterface;
 
     /**
-     * Enables query cache for this Query.
-     *
-     * @param int|null $duration the number of seconds that query results can remain valid in cache.
-     * Use 0 to indicate that the cached data will never expire.
-     * Use a negative number to indicate that query cache should not be used.
-     * @param Dependency|null $dependency the cache dependency associated with the cached result.
-     *
-     * @return $this the Query object itself.
-     */
-    public function cache(int|null $duration = 3600, Dependency $dependency = null): self;
-
-    /**
      * Executes the query and returns the first column of the result.
      *
-     * If this parameter is not given, the `db` application component will be used.
+     * @throws Exception
+     * @throws InvalidConfigException
+     * @throws NotSupportedException
+     * @throws Throwable
      *
-     * @throws Exception|InvalidConfigException|Throwable
-     *
-     * @return array The first column of the query result. An empty array is returned if the query results in nothing.
+     * @return array The first column of the query result. It returns an empty array if the query results in nothing.
      */
     public function column(): array;
 
     /**
-     * Creates a DB command that can be used to execute this query.
+     * Creates a DB command to execute the query.
      *
-     * If this parameter is not given, the `db` application component will be used.
+     * @throws Exception
+     * @throws InvalidConfigException
      *
-     * @throws Exception|InvalidConfigException
-     *
-     * @return CommandInterface the created DB command instance.
+     * @return CommandInterface The created DB command instance.
      */
     public function createCommand(): CommandInterface;
 
     /**
      * Starts a batch query and retrieves data row by row.
      *
-     * This method is similar to {@see batch()} except that in each iteration of the result, only one row of data is
-     * returned. For example,
+     * This method is similar to {@see batch()} except that in each iteration of the result,
+     * it returns only one row of data.
+     *
+     * For example,
      *
      * ```php
      * $query = (new Query)->from('user');
+     *
      * foreach ($query->each() as $row) {
      * }
      * ```
      *
-     * @param int $batchSize the number of records to be fetched in each batch.
+     * @param int $batchSize The number of records to fetch in each batch.
      *
-     * @return BatchQueryResultInterface the batch query result. It implements the {@see Iterator} interface and can be
+     * @return BatchQueryResultInterface The batch query result. It implements the {@see \Iterator} interface and can be
      * traversed to retrieve the data in batches.
      */
     public function each(int $batchSize = 100): BatchQueryResultInterface;
 
     /**
-     * Sets whether to emulate query execution, preventing any interaction with data storage.
-     * After this mode is enabled, methods, returning query results like {@see one()}, {@see all()}, {@see exists()}
-     * and so on, will return empty or false values.
-     * You should use this method in case your program logic indicates query should not return any results, like in case
-     * you set false where condition like `0=1`.
+     * Sets whether to emulate query execution without actually executing a query.
      *
-     * @param bool $value whether to prevent query execution.
+     * When enabled, methods returning results such as {@see one()}, {@see all()}, or {@see exists()}
+     * will return empty or `false` values.
      *
-     * @return QueryInterface the query object itself.
+     * You should use this method in case your program logic requires that a query shouldn't return any results.
+     *
+     * @param bool $value Whether to emulate query execution.
      */
-    public function emulateExecution(bool $value = true): self;
+    public function emulateExecution(bool $value = true): static;
 
     /**
-     * Returns a value indicating whether the query result contains any row of data.
+     * Returns a value indicating whether the query result has any row of data.
      *
-     * @return bool whether the query result contains any row of data.
+     * @throws Exception
+     * @throws InvalidConfigException
+     * @throws Throwable
+     *
+     * @return bool whether the query result has any row of data.
      */
     public function exists(): bool;
 
+    /**
+     * @return bool|null The "distinct" value.
+     */
     public function getDistinct(): bool|null;
 
+    /**
+     * @return array The "from" value.
+     */
     public function getFrom(): array;
 
+    /**
+     * @return array The "group by" value.
+     */
     public function getGroupBy(): array;
 
+    /**
+     * @return array|ExpressionInterface|string|null The "having" value.
+     */
     public function getHaving(): string|array|ExpressionInterface|null;
 
     /**
-     * Return index by key.
+     * @return Closure|string|null The "index by" value.
+     *
+     * @psalm-return Closure(array):array-key|string|null
      */
     public function getIndexBy(): Closure|string|null;
 
-    public function getJoin(): array;
+    /**
+     * @return array The "join" value.
+     *
+     * The format is:
+     *
+     * ```
+     * [
+     *     ['INNER JOIN', 'table1', 'table1.id = table2.id'],
+     *     ['LEFT JOIN', 'table3', 'table1.id = table3.id'],
+     * ]
+     * ```
+     */
+    public function getJoins(): array;
 
-    public function getLimit(): Expression|int|null;
+    /**
+     * @return ExpressionInterface|int|null The "limit" value.
+     */
+    public function getLimit(): ExpressionInterface|int|null;
 
-    public function getOffset(): Expression|int|null;
+    /**
+     * @return ExpressionInterface|int|null The "offset" value.
+     */
+    public function getOffset(): ExpressionInterface|int|null;
 
+    /**
+     * @return array The "order by" value.
+     */
     public function getOrderBy(): array;
 
+    /**
+     * @return array The "params" value.
+     */
     public function getParams(): array;
 
     /**
-     * Return select query string.
+     * @return array The "select" value.
+     * @psalm-return SelectValue
      */
     public function getSelect(): array;
 
+    /**
+     * @return string|null The "select option" value.
+     */
     public function getSelectOption(): string|null;
 
     /**
-     * Returns table names used in {@see from} indexed by aliases.
+     * Returns table names used in {@see from()} indexed by aliases.
      *
      * Both aliases and names are enclosed into {{ and }}.
      *
      * @throws InvalidArgumentException
      *
-     * @return array table names indexed by aliases
+     * @return array The table names indexed by aliases.
      */
     public function getTablesUsedInFrom(): array;
 
-    public function getUnion(): array;
+    /**
+     * @return array The "union" values.
+     *
+     * The format is:
+     *
+     * ```php
+     * ['SELECT * FROM table1', 'SELECT * FROM table2']
+     * ```
+     */
+    public function getUnions(): array;
 
+    /**
+     * @return array|ExpressionInterface|string|null The "where" value.
+     */
     public function getWhere(): array|string|ExpressionInterface|null;
 
+    /**
+     * @return array The withQueries value.
+     */
     public function getWithQueries(): array;
 
     /**
-     * Disables query cache for this Query.
+     * Executes the query and returns a single row of a result.
      *
-     * @return $this the Query object itself.
-     */
-    public function noCache(): self;
-
-    /**
-     * Executes the query and returns a single row of result.
+     * @throws Exception
+     * @throws InvalidConfigException
+     * @throws Throwable
      *
-     * If this parameter is not given, the `db` application component will be used.
-     *
-     * @throws Exception|InvalidConfigException|Throwable
-     *
-     * @return array|object|null The first row (in terms of an array) of the query result. Null is returned if the query
+     * @return array|null The first row (in terms of an array) of the query result. It returns `null` if the query
      * results in nothing.
      */
-    public function one(): array|object|null;
+    public function one(): array|null;
 
     /**
-     * Sets the parameters to be bound to the query.
+     * Sets the parameters to bind to the query.
      *
-     * @param array $params list of query parameter values indexed by parameter placeholders.
+     * @param array $params List of query parameter values indexed by parameter placeholders.
      * For example, `[':name' => 'Dan', ':age' => 31]`.
      *
-     * @return $this the query object itself.
+     * @psalm-param ParamsType $params
      *
-     * {@see addParams()}
+     * @see addParams()
      */
-    public function params(array $params): self;
+    public function params(array $params): static;
 
     /**
-     * Converts the raw query results into the format as specified by this query.
+     * Prepare for building SQL.
      *
-     * This method is internally used to convert the data fetched from database into the format as required by this
-     * query.
+     * {@see QueryBuilderInterface} uses this method when it starts to build SQL from a query object.
+     * You may override this method to do some final preparation work when converting a query into an SQL statement.
      *
-     * @param array $rows the raw query result from database.
-     *
-     * @return array the converted query result.
-     */
-    public function populate(array $rows): array;
-
-    /**
-     * Prepares for building SQL.
-     *
-     * This method is called by {@see QueryBuilderInterface} when it starts to build SQL from a query object.
-     * You may override this method to do some final preparation work when converting a query into a SQL statement.
-     *
-     * @param QueryBuilderInterface $builder
-     *
-     * @return QueryInterface A prepared query instance which will be used by {@see QueryBuilder} to build the SQL.
+     * @param QueryBuilderInterface $builder The query builder.
      */
     public function prepare(QueryBuilderInterface $builder): self;
 
     /**
-     * Returns the query result as a scalar value.
+     * Returns the query results as a scalar value.
      *
      * The value returned will be the first column in the first row of the query results.
      *
-     * @throws Exception|InvalidConfigException|Throwable
+     * @throws Exception
+     * @throws InvalidConfigException
+     * @throws Throwable
      *
-     * @return bool|float|int|string|null the value of the first column in the first row of the query result. False is
+     * @return bool|float|int|string|null The value of the first column in the first row of the query result. False is
      * returned if the query result is empty.
      */
     public function scalar(): bool|int|null|string|float;
 
+    /**
+     * @return bool Whether to emulate query execution.
+     */
     public function shouldEmulateExecution(): bool;
 }

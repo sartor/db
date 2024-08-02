@@ -12,7 +12,7 @@ use Yiisoft\Db\Expression\ExpressionBuilderInterface;
 use Yiisoft\Db\QueryBuilder\QueryBuilderInterface;
 
 /**
- * Class QueryExpressionBuilder is used internally to build {@see Query} object using unified {@see QueryBuilder}
+ * Used internally to build {@see Query} object using unified {@see \Yiisoft\Db\QueryBuilder\AbstractQueryBuilder}
  * expression building interface.
  */
 final class QueryExpressionBuilder implements ExpressionBuilderInterface
@@ -22,7 +22,10 @@ final class QueryExpressionBuilder implements ExpressionBuilderInterface
     }
 
     /**
-     * @throws Exception|InvalidArgumentException|InvalidConfigException|NotSupportedException
+     * @throws Exception
+     * @throws InvalidArgumentException
+     * @throws InvalidConfigException
+     * @throws NotSupportedException
      */
     public function build(QueryInterface $expression, array &$params = []): string
     {

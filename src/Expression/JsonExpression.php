@@ -9,7 +9,7 @@ use Yiisoft\Db\Exception\InvalidConfigException;
 use Yiisoft\Db\Query\QueryInterface;
 
 /**
- * Class JsonExpression represents data that should be encoded to JSON.
+ * Represents data to encode to JSON.
  *
  * For example:
  *
@@ -19,9 +19,6 @@ use Yiisoft\Db\Query\QueryInterface;
  */
 class JsonExpression implements ExpressionInterface, JsonSerializable
 {
-    public const TYPE_JSON = 'json';
-    public const TYPE_JSONB = 'jsonb';
-
     public function __construct(protected mixed $value, private string|null $type = null)
     {
         if ($value instanceof self) {
@@ -30,7 +27,7 @@ class JsonExpression implements ExpressionInterface, JsonSerializable
     }
 
     /**
-     * The value must be compatible with {@see \Yiisoft\Json\Json::encode()|Json::encode()} input requirements.
+     * The value must be compatible with {@see \json_encode()} input requirements.
      */
     public function getValue(): mixed
     {
@@ -52,21 +49,20 @@ class JsonExpression implements ExpressionInterface, JsonSerializable
     /**
      * Specify data which should be serialized to JSON.
      *
-     * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
+     * @link https://php.net/manual/en/jsonserializable.jsonserialize.php
      *
-     * @throws InvalidConfigException when JsonExpression contains QueryInterface object
+     * @throws InvalidConfigException When JsonExpression has a {@see QueryInterface} object
      *
-     * @return mixed Data which can be serialized by <b>json_encode</b>, which is a value of any type other than a
-     * resource.
+     * @return mixed Data which can be serialized by `json_encode`, which is a value of any type other than a resource.
      */
     public function jsonSerialize(): mixed
     {
-        /** @var mixed */
+        /** @psalm-var mixed $value */
         $value = $this->getValue();
 
         if ($value instanceof QueryInterface) {
             throw new InvalidConfigException(
-                'The JsonExpression class can not be serialized to JSON when the value is a QueryInterface object'
+                'The JsonExpression class can not be serialized to JSON when the value is a QueryInterface object.'
             );
         }
 

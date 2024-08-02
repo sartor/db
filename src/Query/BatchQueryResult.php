@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Yiisoft\Db\Query;
 
+use Closure;
 use Throwable;
 use Yiisoft\Db\Exception\Exception;
-use Yiisoft\Db\Exception\InvalidCallException;
 use Yiisoft\Db\Exception\InvalidConfigException;
 use Yiisoft\Db\Query\Data\DataReaderInterface;
 
@@ -15,30 +15,35 @@ use function key;
 use function next;
 use function reset;
 
+/**
+ * Represents the result of a batch query execution.
+ *
+ * A batch query is a group of many SQL statements that are executed together as a single unit.
+ */
 class BatchQueryResult implements BatchQueryResultInterface
 {
     protected int $batchSize = 100;
     private int|string|null $key = null;
 
     /**
-     * @var DataReaderInterface|null the data reader associated with this batch query.
+     * @var DataReaderInterface|null The data reader associated with this batch query.
      */
     protected DataReaderInterface|null $dataReader = null;
 
     /**
-     * @var array|null the data retrieved in the current batch
+     * @var array|null The data retrieved in the current batch.
      */
     private array|null $batch = null;
 
+    private Closure|null $populateMethod = null;
+
     /**
-     * @var mixed the value for the current iteration
+     * @var mixed The value for the current iteration.
      */
     private mixed $value;
 
-    public function __construct(
-        private QueryInterface $query,
-        private bool $each = false
-    ) {
+    public function __construct(private QueryInterface $query, private bool $each = false)
+    {
     }
 
     public function __destruct()
@@ -86,9 +91,11 @@ class BatchQueryResult implements BatchQueryResultInterface
     /**
      * Fetches the next batch of data.
      *
-     * @throws Exception|InvalidConfigException|Throwable
+     * @throws Exception
+     * @throws InvalidConfigException
+     * @throws Throwable
      *
-     * @return array the data fetched.
+     * @return array The data fetched.
      */
     protected function fetchData(): array
     {
@@ -98,15 +105,15 @@ class BatchQueryResult implements BatchQueryResultInterface
 
         $rows = $this->getRows();
 
-        return $this->query->populate($rows);
+        if ($this->populateMethod !== null) {
+            return (array) ($this->populateMethod)($rows, $this->query->getIndexBy());
+        }
+
+        return $rows;
     }
 
     /**
      * Reads and collects rows for batch.
-     *
-     * @throws InvalidCallException
-     *
-     * @psalm-suppress MixedArrayAccess
      */
     protected function getRows(): array
     {
@@ -150,6 +157,13 @@ class BatchQueryResult implements BatchQueryResultInterface
     public function batchSize(int $value): self
     {
         $this->batchSize = $value;
+
+        return $this;
+    }
+
+    public function setPopulatedMethod(Closure|null $populateMethod = null): static
+    {
+        $this->populateMethod = $populateMethod;
 
         return $this;
     }

@@ -1,31 +1,21 @@
 on:
   pull_request:
-    paths-ignore:
-      - 'docs/**'
-      - 'README.md'
-      - 'CHANGELOG.md'
-      - '.gitignore'
-      - '.gitattributes'
-      - 'infection.json.dist'
-      - 'psalm.xml'
-
-  push:
-    paths-ignore:
-      - 'docs/**'
-      - 'README.md'
-      - 'CHANGELOG.md'
-      - '.gitignore'
-      - '.gitattributes'
-      - 'infection.json.dist'
-      - 'psalm.xml'
+    paths:
+      - 'src/**'
+      - 'config/**'
+      - '.github/workflows/rector.yml'
+      - 'composer.json'
+      - 'rector.php'
 
 name: rector
 
 jobs:
   rector:
     uses: yiisoft/actions/.github/workflows/rector.yml@master
+    secrets:
+      token: ${{ secrets.YIISOFT_GITHUB_TOKEN }}
     with:
       os: >-
         ['ubuntu-latest']
       php: >-
-        ['8.0']
+        ['8.3']

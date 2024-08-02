@@ -4,46 +4,68 @@ declare(strict_types=1);
 
 namespace Yiisoft\Db\QueryBuilder;
 
-use Generator;
 use JsonException;
+use Yiisoft\Db\Connection\ConnectionInterface;
 use Yiisoft\Db\Exception\Exception;
 use Yiisoft\Db\Exception\InvalidArgumentException;
 use Yiisoft\Db\Exception\InvalidConfigException;
 use Yiisoft\Db\Exception\NotSupportedException;
 use Yiisoft\Db\Query\QueryInterface;
 
+/**
+ * Defines methods for building SQL statements for DML (data manipulation language).
+ *
+ * @link https://en.wikipedia.org/wiki/Data_manipulation_language
+ *
+ * @psalm-import-type ParamsType from ConnectionInterface
+ * @psalm-type BatchValues = iterable<iterable<array-key, mixed>>
+ */
 interface DMLQueryBuilderInterface
 {
     /**
-     * Generates a batch INSERT SQL statement.
+     * Generates a batch `INSERT` SQL statement.
      *
      * For example,
      *
      * ```php
-     * $sql = $queryBuilder->batchInsert('user', ['name', 'age'], [
+     * $sql = $queryBuilder->insertBatch('user', [
      *     ['Tom', 30],
      *     ['Jane', 20],
      *     ['Linda', 25],
+     * ], ['name', 'age']);
+     * ```
+     *
+     * or as associative arrays where the keys are column names
+     *
+     * ```php
+     * $queryBuilder->insertBatch('user', [
+     *     ['name' => 'Tom', 'age' => 30],
+     *     ['name' => 'Jane', 'age' => 20],
+     *     ['name' => 'Linda', 'age' => 25],
      * ]);
      * ```
      *
-     * Note that the values in each row must match the corresponding column names.
+     * @param string $table The table to insert new rows into.
+     * @param iterable $rows The rows to batch-insert into the table.
+     * @param string[] $columns The column names of the table.
+     * @param array $params The binding parameters. This parameter exists.
      *
-     * The method will properly escape the column names, and quote the values to be inserted.
+     * @throws Exception
+     * @throws InvalidArgumentException
      *
-     * @param string $table the table that new rows will be inserted into.
-     * @param array $columns the column names.
-     * @param Generator|iterable $rows the rows to be batched inserted into the table.
-     * @param array $params the binding parameters. This parameter exists.
+     * @return string The batch INSERT SQL statement.
      *
-     * @throws Exception|InvalidArgumentException
+     * @psalm-param BatchValues $rows
+     * @psalm-param ParamsType $params
      *
-     * @return string the batch INSERT SQL statement.
+     * Note:
+     * - That the values in each row must match the corresponding column names.
+     * - The method will escape the column names, and quote the values to insert.
      */
-    public function batchInsert(string $table, array $columns, iterable|Generator $rows, array &$params = []): string;
+    public function insertBatch(string $table, iterable $rows, array $columns = [], array &$params = []): string;
 
     /**
-     * Creates a DELETE SQL statement.
+     * Creates a `DELETE` SQL statement.
      *
      * For example,
      *
@@ -51,22 +73,26 @@ interface DMLQueryBuilderInterface
      * $sql = $queryBuilder->delete('user', 'status = 0');
      * ```
      *
-     * The method will properly escape the table and column names.
+     * @param string $table The table to delete the data from.
+     * @param array|string $condition The condition to put in the `WHERE` part.
+     * Please refer to {@see Query::where()} On how to specify condition.
+     * @param array $params The binding parameters to change by this method to bind to DB command later.
      *
-     * @param string $table the table where the data will be deleted from.
-     * @param array|string $condition the condition that will be put in the WHERE part. Please refer to
-     * {@see Query::where()} on how to specify condition.
-     * @param array $params the binding parameters that will be modified by this method so that they can be bound to the
-     * DB command later.
+     * @throws Exception
+     * @throws InvalidArgumentException
+     * @throws InvalidConfigException
+     * @throws NotSupportedException If this isn't supported by the underlying DBMS.
      *
-     * @throws Exception|InvalidArgumentException
+     * @return string The `DELETE` SQL.
      *
-     * @return string the DELETE SQL.
+     * @psalm-param ParamsType $params
+     *
+     * Note: The method will escape the table and column names.
      */
     public function delete(string $table, array|string $condition, array &$params): string;
 
     /**
-     * Creates an INSERT SQL statement.
+     * Creates an `INSERT` SQL statement.
      *
      * For example,
      *
@@ -77,55 +103,60 @@ interface DMLQueryBuilderInterface
      * ], $params);
      * ```
      *
-     * The method will properly escape the table and column names.
+     * @param string $table The table to insert new rows into.
+     * @param array|QueryInterface $columns The column data (name => value) to insert into the table or instance of
+     * {@see Query} to perform `INSERT INTO ... SELECT` SQL statement.
+     * Passing of {@see Query}.
+     * @param array $params The binding parameters that will be generated by this method.
+     * They should be bound to the DB command later.
      *
-     * @param string $table the table that new rows will be inserted into.
-     * @param array|QueryInterface $columns the column data (name => value) to be inserted into the table or instance of
-     * {@see Query} to perform INSERT INTO ... SELECT SQL statement. Passing of {@see Query}.
-     * @param array $params the binding parameters that will be generated by this method. They should be bound to the
-     * DB command later.
+     * @throws Exception
+     * @throws InvalidArgumentException
+     * @throws InvalidConfigException
+     * @throws NotSupportedException If this isn't supported by the underlying DBMS.
      *
-     * @throws Exception|InvalidArgumentException|InvalidConfigException|NotSupportedException
+     * @return string The INSERT SQL.
      *
-     * @return string the INSERT SQL.
+     * @psalm-param ParamsType $params
+     *
+     * Note: The method will escape the table and column names.
      */
     public function insert(string $table, QueryInterface|array $columns, array &$params = []): string;
 
     /**
      * Creates an INSERT SQL statement with returning inserted values.
      *
-     * @param string $table
-     * @param array|QueryInterface $columns
-     * @param array $params
+     * @param string $table The table to insert new rows into.
+     * @param array|QueryInterface $columns The column data (name => value) to insert into the table or instance of
+     * {@see Query} to perform `INSERT INTO ... SELECT` SQL statement.
+     * @param array $params The binding parameters that will be generated by this method.
      *
-     * @return string
+     * @throws Exception
+     * @throws NotSupportedException If this isn't supported by the underlying DBMS.
+     *
+     * @psalm-param ParamsType $params
+     *
+     * Note: The method will escape the table and column names.
      */
-    public function insertEx(string $table, QueryInterface|array $columns, array &$params = []): string;
+    public function insertWithReturningPks(string $table, QueryInterface|array $columns, array &$params = []): string;
 
     /**
-     * Creates a SQL statement for resetting the sequence value of a table's primary key.
+     * Creates an SQL statement for resetting the sequence value of a table's primary key.
      *
      * The sequence will be reset such that the primary key of the next new row inserted will have the specified value
      * or 1.
      *
-     * @param string $tableName the name of the table whose primary key sequence will be reset.
-     * @param int|string|null $value the value for the primary key of the next new row inserted. If this is not
-     * set, the next new row's primary key will have a value 1.
+     * @param string $table The name of the table whose primary key sequence will be reset.
+     * @param int|string|null $value The value for the primary key of the next new row inserted.
+     * If this isn't set, the next new row's primary key will have value 1.
      *
-     * @throws Exception|NotSupportedException if this is not supported by the underlying DBMS.
+     * @throws NotSupportedException If this isn't supported by the underlying DBMS.
+     * @throws Exception
+     * @return string The SQL statement for a resetting sequence.
      *
-     * @return string the SQL statement for resetting sequence.
+     * Note: The method will escape the table and column names.
      */
-    public function resetSequence(string $tableName, int|string|null $value = null): string;
-
-    /**
-     * Builds a SQL statement for truncating a DB table.
-     *
-     * @param string $table the table to be truncated. The name will be properly quoted by the method.
-     *
-     * @return string the SQL statement for truncating a DB table.
-     */
-    public function truncateTable(string $table): string;
+    public function resetSequence(string $table, int|string|null $value = null): string;
 
     /**
      * Creates an UPDATE SQL statement.
@@ -137,23 +168,26 @@ interface DMLQueryBuilderInterface
      * $sql = $queryBuilder->update('user', ['status' => 1], 'age > 30', $params);
      * ```
      *
-     * The method will properly escape the table and column names.
-     *
-     * @param string $table the table to be updated.
-     * @param array $columns the column data (name => value) to be updated.
-     * @param array|string $condition the condition that will be put in the WHERE part. Please refer to
-     * {@see Query::where()} on how to specify condition.
-     * @param array $params the binding parameters that will be modified by this method so that they can be bound to the
+     * @param string $table The table to update.
+     * @param array $columns The column data (name => value) to update the table.
+     * @param array|string $condition The condition to put in the `WHERE` part. Please refer to
+     * {@see Query::where()} On how to specify condition.
+     * @param array $params The binding parameters that will be modified by this method so that they can be bound to
      * DB command later.
      *
-     * @throws Exception|InvalidArgumentException
+     * @throws Exception
+     * @throws InvalidArgumentException
      *
-     * @return string the UPDATE SQL.
+     * @return string The UPDATE SQL.
+     *
+     * @psalm-param ParamsType $params
+     *
+     * Note: The method will escape the table and column names.
      */
     public function update(string $table, array $columns, array|string $condition, array &$params = []): string;
 
     /**
-     * Creates an SQL statement to insert rows into a database table if they do not already exist (matching unique
+     * Creates an SQL statement to insert rows into a database table if they don't already exist (matching unique
      * constraints), or update them if they do.
      *
      * For example,
@@ -168,21 +202,24 @@ interface DMLQueryBuilderInterface
      * ], $params);
      * ```
      *
-     * The method will properly escape the table and column names.
-     *
-     * @param string $table the table that new rows will be inserted into/updated in.
-     * @param array|QueryInterface $insertColumns the column data (name => value) to be inserted into the table or
+     * @param string $table The table to insert rows into or update new rows in.
+     * @param array|QueryInterface $insertColumns The column data (name => value) to insert into the table or
      * instance of {@see Query} to perform `INSERT INTO ... SELECT` SQL statement.
-     * @param array|bool $updateColumns the column data (name => value) to be updated if they already exist. If `true`
+     * @param array|bool $updateColumns The column data (name => value) to update if they already exist. If `true`
      * is passed, the column data will be updated to match the insert column data. If `false` is passed, no update will
-     * be performed if the column data already exists.
-     * @param array $params the binding parameters that will be generated by this method. They should be bound to the DB
+     * be performed if the column data already exist.
+     * @param array $params The binding parameters that will be generated by this method. They should be bound to the DB
      * command later.
      *
-     * @throws Exception|InvalidConfigException|JsonException|NotSupportedException if this is not supported by the
-     * underlying DBMS.
+     * @throws Exception
+     * @throws InvalidConfigException
+     * @throws JsonException
+     * @throws NotSupportedException If this isn't supported by the underlying DBMS.
      *
-     * @return string the resulting SQL.
+     * @psalm-param array<string, mixed>|QueryInterface $insertColumns
+     * @psalm-param ParamsType $params
+     *
+     * Note: The method will escape the table and column names.
      */
     public function upsert(
         string $table,

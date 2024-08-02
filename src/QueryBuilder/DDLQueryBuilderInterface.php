@@ -9,373 +9,422 @@ use Yiisoft\Db\Exception\InvalidArgumentException;
 use Yiisoft\Db\Exception\InvalidConfigException;
 use Yiisoft\Db\Exception\NotSupportedException;
 use Yiisoft\Db\Query\QueryInterface;
-use Yiisoft\Db\Schema\ColumnSchemaBuilder;
+use Yiisoft\Db\Schema\Builder\ColumnInterface;
 
+/**
+ * Defines methods for building SQL statements for DDL (data definition language).
+ *
+ * @link https://en.wikipedia.org/wiki/Data_definition_language
+ */
 interface DDLQueryBuilderInterface
 {
     /**
-     * Creates a SQL command for adding a check constraint to an existing table.
+     * Creates an SQL command for adding a check constraint to an existing table.
      *
-     * @param string $name the name of the check constraint. The name will be properly quoted by the method.
-     * @param string $table the table that the check constraint will be added to. The name will be properly quoted by
-     * the method.
-     * @param string $expression the SQL of the `CHECK` constraint.
+     * @param string $table The table to add the check constraint to.
+     * @param string $name The name of the check constraint.
+     * @param string $expression The SQL of the `CHECK` constraint.
      *
-     * @return string the SQL statement for adding a check constraint to an existing table.
+     * @return string The SQL statement for adding a check constraint to an existing table.
+     *
+     * Note: The method will quote the `name` and `table` parameters before using them in the generated SQL.
      */
-    public function addCheck(string $name, string $table, string $expression): string;
+    public function addCheck(string $table, string $name, string $expression): string;
 
     /**
-     * Builds a SQL statement for adding a new DB column.
+     * Builds an SQL statement for adding a new DB column.
      *
-     * @param string $table the table that the new column will be added to. The table name will be properly quoted by
-     * the method.
-     * @param string $column the name of the new column. The name will be properly quoted by the method.
-     * @param string $type the column type. The {@see getColumnType()} method will be invoked to convert abstract column
-     * type (if any) into the physical one. Anything that is not recognized as abstract type will be kept in the
-     * generated SQL.
+     * @param string $table The table to add the new column will to.
+     * @param string $column The name of the new column.
+     * @param ColumnInterface|string $type The column type.
+     * {@see getColumnType()} Method will be invoked to convert an abstract column type (if any) into the physical one.
+     * Anything that isn't recognized as an abstract type will be kept in the generated SQL.
      * For example, 'string' will be turned into 'varchar(255)', while 'string not null' will become
      * 'varchar(255) not null'.
      *
-     * @return string the SQL statement for adding a new column.
+     * @return string The SQL statement for adding a new column.
+     *
+     * Note: The method will quote the `table` and `column` parameters before using them in the generated SQL.
      */
-    public function addColumn(string $table, string $column, string $type): string;
+    public function addColumn(string $table, string $column, ColumnInterface|string $type): string;
 
     /**
-     * Builds a SQL command for adding comment to column.
+     * Builds an SQL command for adding comment to column.
      *
-     * @param string $table the table whose column is to be commented. The table name will be properly quoted by the
-     * method.
-     * @param string $column the name of the column to be commented. The column name will be properly quoted by the
-     * method.
-     * @param string $comment the text of the comment to be added. The comment will be properly quoted by the method.
+     * @param string $table The table whose column to be comment.
+     * @param string $column The name of the column to comment.
+     * @param string $comment The text of the comment to add.
      *
      * @throws Exception
      *
-     * @return string the SQL statement for adding comment on column.
+     * @return string The SQL statement for adding comment on column.
+     *
+     * Note: The method will quote the `table`, `column`, and `comment` parameters before using them in the generated
+     * SQL.
      */
     public function addCommentOnColumn(string $table, string $column, string $comment): string;
 
     /**
-     * Builds a SQL command for adding comment to table.
+     * Builds an SQL command for adding comment to the table.
      *
-     * @param string $table the table whose column is to be commented. The table name will be properly quoted by the
-     * method.
-     * @param string $comment the text of the comment to be added. The comment will be properly quoted by the method.
+     * @param string $table The table whose column is to comment.
+     * @param string $comment The text of the comment to add.
      *
      * @throws Exception
      *
-     * @return string the SQL statement for adding comment on table.
+     * @return string The SQL statement for adding comment on the table.
+     *
+     * Note: The method will quote the `table` and `comment` parameters before using them in the generated SQL.
      */
     public function addCommentOnTable(string $table, string $comment): string;
 
     /**
-     * Creates a SQL command for adding a default value constraint to an existing table.
+     * Creates an SQL command for adding a default value constraint to an existing table.
      *
-     * @param string $name the name of the default value constraint.
-     * The name will be properly quoted by the method.
-     * @param string $table the table that the default value constraint will be added to.
-     * The name will be properly quoted by the method.
-     * @param string $column the name of the column to that the constraint will be added on.
-     * The name will be properly quoted by the method.
-     * @param mixed $value default value.
+     * @param string $table The table toi add the default value constraint to.
+     * @param string $name The name of the default value constraint.
+     * @param string $column The name of the column to add constraint on.
+     * @param mixed $value The default value to set for the column.
      *
-     * @throws Exception|NotSupportedException if this is not supported by the underlying DBMS.
+     * @throws Exception
+     * @throws NotSupportedException If this isn't supported by the underlying DBMS.
      *
      * @return string the SQL statement for adding a default value constraint to an existing table.
+     *
+     * Note: The method will quote the `name`, `table`, and `column` parameters before using them in the generated SQL.
      */
-    public function addDefaultValue(string $name, string $table, string $column, mixed $value): string;
+    public function addDefaultValue(string $table, string $name, string $column, mixed $value): string;
 
     /**
-     * Builds a SQL statement for adding a foreign key constraint to an existing table. The method will properly quote
-     * the table and column names.
+     * Builds an SQL statement for adding a foreign key constraint to an existing table.
      *
-     * @param string $name the name of the foreign key constraint.
-     * @param string $table the table that the foreign key constraint will be added to.
-     * @param array|string $columns the name of the column to that the constraint will be added on. If there are
-     * multiple columns, separate them with commas or use an array to represent them.
-     * @param string $refTable the table that the foreign key references to.
-     * @param array|string $refColumns the name of the column that the foreign key references to. If there are multiple
-     * columns, separate them with commas or use an array to represent them.
-     * @param string|null $delete the ON DELETE option. Most DBMS support these options: RESTRICT, CASCADE, NO ACTION,
-     * SET DEFAULT, SET NULL.
-     * @param string|null $update the ON UPDATE option. Most DBMS support these options: RESTRICT, CASCADE, NO ACTION,
-     * SET DEFAULT, SET NULL.
+     * @param string $table The table to add the foreign key constraint will to.
+     * @param string $name The name of the foreign key constraint.
+     * @param array|string $columns The name of the column to add the constraint will on. If there are
+     * many columns, separate them with commas or use an array to represent them.
+     * @param string $referenceTable The table that the foreign key references to.
+     * @param array|string $referenceColumns The name of the column that the foreign key references to.
+     * If there are many columns, separate them with commas or use an array to represent them.
+     * @param string|null $delete The `ON DELETE` option. Most DBMS support these options: `RESTRICT`, `CASCADE`, `NO ACTION`,
+     * `SET DEFAULT`, `SET NULL`.
+     * @param string|null $update The `ON UPDATE` option. Most DBMS support these options: `RESTRICT`, `CASCADE`, `NO ACTION`,
+     * `SET DEFAULT`, `SET NULL`.
      *
-     * @throws Exception|InvalidArgumentException
+     * @throws Exception
+     * @throws InvalidArgumentException
      *
-     * @return string the SQL statement for adding a foreign key constraint to an existing table.
+     * @return string The SQL statement for adding a foreign key constraint to an existing table.
+     *
+     * Note: The method will quote the `name`, `table`, `referenceTable` parameters before using them in the generated SQL.
      */
     public function addForeignKey(
-        string $name,
         string $table,
+        string $name,
         array|string $columns,
-        string $refTable,
-        array|string $refColumns,
+        string $referenceTable,
+        array|string $referenceColumns,
         string|null $delete = null,
         string|null $update = null
     ): string;
 
     /**
-     * Builds a SQL statement for adding a primary key constraint to an existing table.
+     * Builds an SQL statement for adding a primary key constraint to an existing table.
      *
-     * @param string $name the name of the primary key constraint.
-     * @param string $table the table that the primary key constraint will be added to.
-     * @param array|string $columns comma separated string or array of columns that the primary key will consist of.
+     * @param string $table The table to add the primary key constraint will to.
+     * @param string $name The name of the primary key constraint.
+     * @param array|string $columns Comma separated string or array of columns that the primary key will consist of.
      *
-     * @return string the SQL statement for adding a primary key constraint to an existing table.
+     * @return string The SQL statement for adding a primary key constraint to an existing table.
+     *
+     * Note: The method will quote the `name`, `table`, and `column` parameters before using them in the generated SQL.
      */
-    public function addPrimaryKey(string $name, string $table, array|string $columns): string;
+    public function addPrimaryKey(string $table, string $name, array|string $columns): string;
 
     /**
-     * Creates a SQL command for adding a unique constraint to an existing table.
+     * Creates an SQL command for adding a unique constraint to an existing table.
      *
-     * @param string $name the name of the unique constraint. The name will be properly quoted by the method.
-     * @param string $table the table that the unique constraint will be added to. The name will be properly quoted by
-     * the method.
-     * @param array|string $columns the name of the column to that the constraint will be added on. If there are
-     * multiple columns, separate them with commas. The name will be properly quoted by the method.
+     * @param string $table The table to add the unique constraint to.
+     * @param string $name The name of the unique constraint.
+     * @param array|string $columns The name of the column to add the constraint on. If there are many
+     * columns, separate them with commas.
      *
-     * @return string the SQL statement for adding a unique constraint to an existing table.
+     * @return string The SQL statement for adding a unique constraint to an existing table.
+     *
+     * Note: The method will quote the `name`, `table`, and `column` parameters before using them in the generated SQL.
      */
-    public function addUnique(string $name, string $table, array|string $columns): string;
+    public function addUnique(string $table, string $name, array|string $columns): string;
 
     /**
-     * Builds a SQL statement for changing the definition of a column.
+     * Builds an SQL statement for changing the definition of a column.
      *
-     * @param string $table the table whose column is to be changed. The table name will be properly quoted by the
-     * method.
-     * @param string $column the name of the column to be changed. The name will be properly quoted by the method.
-     * @param ColumnSchemaBuilder|string $type the new column type. The {@see getColumnType()} method will be invoked to convert abstract
-     * column type (if any) into the physical one. Anything that is not recognized as abstract type will be kept
-     * in the generated SQL.
+     * @param string $table The table whose column is to change.
+     * @param string $column The name of the column to change.
+     * @param ColumnInterface|string $type The new column type.
+     * {@see getColumnType()} Method will be invoked to convert an abstract column type (if any) into the physical one.
+     * Anything that isn't recognized as an abstract type will be kept in the generated SQL.
+     * For example, 'string' will be turned into 'varchar(255)', while 'string not null' will become
+     * 'varchar(255) not null'.
      *
-     * For example, 'string' will be turned into 'varchar(255)', while 'string not null'
-     * will become 'varchar(255) not null'.
+     * @return string The SQL statement for changing the definition of a column.
      *
-     * @return string the SQL statement for changing the definition of a column.
+     * Note: The method will quote the `table` and `column` parameters before using them in the generated SQL.
      */
-    public function alterColumn(string $table, string $column, ColumnSchemaBuilder|string $type): string;
+    public function alterColumn(string $table, string $column, ColumnInterface|string $type): string;
 
     /**
-     * Builds a SQL statement for enabling or disabling integrity check.
+     * Builds an SQL statement for enabling or disabling integrity check.
      *
-     * @param string $schema the schema of the tables. Defaults to empty string, meaning the current or default schema.
-     * @param string $table the table name. Defaults to empty string, meaning that no table will be changed.
-     * @param bool $check whether to turn on or off the integrity check.
+     * @param string $schema The schema of the tables. Defaults to empty string, meaning the current or default schema.
+     * @param string $table The table name. Defaults to empty string, meaning that no table will be changed.
+     * @param bool $check Whether to turn on or off the integrity check.
      *
-     * @throws Exception|NotSupportedException if this is not supported by the underlying DBMS.
+     * @throws Exception
+     * @throws NotSupportedException If this isn't supported by the underlying DBMS.
      *
-     * @return string the SQL statement for checking integrity.
+     * @return string The SQL statement for checking integrity.
+     *
+     * Note: The method will quote the `table` parameters before using them in the generated SQL.
      */
     public function checkIntegrity(string $schema = '', string $table = '', bool $check = true): string;
 
     /**
-     * Builds a SQL statement for creating a new index.
+     * Builds an SQL statement for creating a new index.
      *
-     * @param string $name the name of the index. The name will be properly quoted by the method.
-     * @param string $table the table that the new index will be created for. The table name will be properly quoted by
-     * the method.
-     * @param array|string $columns the column(s) that should be included in the index. If there are multiple columns,
-     * separate them with commas or use an array to represent them. Each column name will be properly quoted by the
-     * method, unless a parenthesis is found in the name.
-     * @param string|null $indexType type of index supported DBMS - for example: UNIQUE, FULLTEXT, SPATIAL, BITMAP or
-     * null as default
-     * @param string|null $indexMethod for setting index organization method (with 'USING', not all DBMS)
+     * @param string $table The table to create the new index for.
+     * @param string $name The name of the index.
+     * @param array|string $columns The column(s) to include in the index.
+     * If there are many columns, separate them with commas or use an array to represent them.
+     * @param string|null $indexType Type of index-supported DBMS - for example, `UNIQUE`, `FULLTEXT`, `SPATIAL`, `BITMAP` or
+     * `null` as default
+     * @param string|null $indexMethod For setting index organization method (with `USING`, not all DBMS)
      *
-     * @throws Exception|InvalidArgumentException
+     * @throws Exception
+     * @throws InvalidArgumentException
      *
-     * @return string the SQL statement for creating a new index.
+     * @return string The SQL statement for creating a new index.
+     *
+     * Note: The method will quote the `name`, `table`, and `column` parameters before using them in the generated SQL.
      */
     public function createIndex(
-        string $name,
         string $table,
+        string $name,
         array|string $columns,
         string $indexType = null,
         string $indexMethod = null
     ): string;
 
     /**
-     * Builds a SQL statement for creating a new DB table.
+     * Builds an SQL statement for creating a new DB table.
      *
-     * The columns in the new  table should be specified as name-definition pairs (e.g. 'name' => 'string'), where name
-     * stands for a column name which will be properly quoted by the method, and definition stands for the column type
-     * which can contain an abstract DB type.
+     * The columns in the new table should be specified as name-definition pairs ('name' => 'string'), where name
+     * stands for a column name which will be quoted by the method, and definition stands for the column type which can
+     * contain an abstract DB type.
      *
      * The {@see getColumnType()} method will be invoked to convert any abstract type into a physical one.
      *
-     * If a column is specified with definition only (e.g. 'PRIMARY KEY (name, type)'), it will be directly inserted
+     * If a column is specified with definition only ('PRIMARY KEY (name, type)'), it will be directly inserted
      * into the generated SQL.
      *
      * For example,
      *
      * ```php
-     * $sql = $queryBuilder->createTable('user', [
-     *  'id' => 'pk',
-     *  'name' => 'string',
-     *  'age' => 'integer',
-     * ]);
+     * $sql = $queryBuilder->createTable('user', ['id' => 'pk', 'name' => 'string', 'age' => 'integer']);
      * ```
      *
-     * @param string $table the name of the table to be created. The name will be properly quoted by the method.
-     * @param array $columns the columns (name => definition) in the new table.
-     * @param string|null $options additional SQL fragments that will be appended to the generated SQL.
+     * @param string $table The name of the table to create.
+     * @param array $columns The columns (name => definition) in the new table.
+     * The definition can be `string` or {@see ColumnInterface} instance.
+     * @param string|null $options More SQL fragments to append to the generated SQL.
      *
-     * @return string the SQL statement for creating a new DB table.
+     * @return string The SQL statement for creating a new DB table.
+     *
+     * Note: The method will quote the `table` and `columns` parameter before using it in the generated SQL.
+     *
+     * @psalm-param array<string, ColumnInterface>|string[] $columns
      */
     public function createTable(string $table, array $columns, string $options = null): string;
 
     /**
-     * Creates a SQL View.
+     * Creates an SQL View.
      *
-     * @param string $viewName the name of the view to be created.
-     * @param QueryInterface|string $subQuery the select statement which defines the view.
-     *
+     * @param string $viewName The name of the view to create.
+     * @param QueryInterface|string $subQuery The select statement which defines the view.
      * This can be either a string or a {@see Query} object.
      *
-     * @throws Exception|InvalidConfigException|NotSupportedException
-     *
-     * @return string the `CREATE VIEW` SQL statement.
+     * @throws InvalidConfigException
+     * @throws NotSupportedException If this isn't supported by the underlying DBMS.
+     * @throws Exception
+     * @return string The `CREATE VIEW` SQL statement.
+     * Note: The method will quote the `viewName` parameter before using it in the generated SQL.
      */
     public function createView(string $viewName, QueryInterface|string $subQuery): string;
 
     /**
-     * Creates a SQL command for dropping a check constraint.
+     * Creates an SQL command for dropping a check constraint.
      *
-     * @param string $name the name of the check constraint to be dropped. The name will be properly quoted by the
-     * method.
-     * @param string $table the table whose check constraint is to be dropped. The name will be properly quoted by the
-     * method.
+     * @param string $table The table whose check constraint is to drop.
+     * @param string $name The name of the check constraint to drop.
      *
-     * @return string the SQL statement for dropping a check constraint.
+     * @return string The SQL statement for dropping a check constraint.
+     *
+     * Note: The method will quote the `name` and `table` parameters before using them in the generated SQL.
      */
-    public function dropCheck(string $name, string $table): string;
+    public function dropCheck(string $table, string $name): string;
 
     /**
-     * Builds a SQL statement for dropping a DB column.
+     * Builds an SQL statement for dropping a DB column.
      *
-     * @param string $table the table whose column is to be dropped. The name will be properly quoted by the method.
-     * @param string $column the name of the column to be dropped. The name will be properly quoted by the method.
+     * @param string $table The table whose column is to drop.
+     * @param string $column The name of the column to drop.
      *
-     * @return string the SQL statement for dropping a DB column.
+     * @return string The SQL statement for dropping a DB column.
+     *
+     * Note: The method will quote the `table` and `column` parameters before using them in the generated SQL.
      */
     public function dropColumn(string $table, string $column): string;
 
     /**
-     * Builds a SQL command for adding comment to column.
+     * Builds an SQL command for dropping comment to column.
      *
-     * @param string $table the table whose column is to be commented. The table name will be properly quoted by the
-     * method.
-     * @param string $column the name of the column to be commented. The column name will be properly quoted by the
-     * method.
+     * @param string $table The table whose column is to comment.
+     * @param string $column The name of the column to comment.
      *
-     * @return string the SQL statement for adding comment on column.
+     * @return string The SQL statement for dropping comment on column.
+     *
+     * Note: The method will quote the `table` and `column` parameters before using them in the generated SQL.
      */
     public function dropCommentFromColumn(string $table, string $column): string;
 
     /**
-     * Builds a SQL command for adding comment to table.
+     * Builds an SQL command for dropping comment to the table.
      *
-     * @param string $table the table whose column is to be commented. The table name will be properly quoted by the
-     * method.
+     * @param string $table The table whose column is to comment.
      *
-     * @return string the SQL statement for adding comment on column.
+     * @return string The SQL statement for dropping comment on column.
+     *
+     * Note: The method will quote the `table` parameter before using it in the generated SQL.
      */
     public function dropCommentFromTable(string $table): string;
 
     /**
-     * Creates a SQL command for dropping a default value constraint.
+     * Creates an SQL command for dropping a default value constraint.
      *
-     * @param string $name the name of the default value constraint to be dropped.
-     * The name will be properly quoted by the method.
-     * @param string $table the table whose default value constraint is to be dropped.
-     * The name will be properly quoted by the method.
+     * @param string $table The table whose default value constraint is to drop.
+     * @param string $name The name of the default value constraint to drop.
      *
-     * @throws Exception|NotSupportedException if this is not supported by the underlying DBMS.
+     * @throws Exception
+     * @throws NotSupportedException If this isn't supported by the underlying DBMS.
      *
-     * @return string the SQL statement for dropping a default value constraint.
+     * @return string The SQL statement for dropping a default value constraint.
+     *
+     * Note: The method will quote the `name` and `table` parameters before using them in the generated SQL.
      */
-    public function dropDefaultValue(string $name, string $table): string;
+    public function dropDefaultValue(string $table, string $name): string;
 
     /**
-     * Builds a SQL statement for dropping a foreign key constraint.
+     * Builds an SQL statement for dropping a foreign key constraint.
      *
-     * @param string $name the name of the foreign key constraint to be dropped. The name will be properly quoted by
-     * the method.
-     * @param string $table the table whose foreign is to be dropped. The name will be properly quoted by the method.
+     * @param string $table The table whose foreign is to drop.
+     * @param string $name The name of the foreign key constraint to drop.
      *
-     * @return string the SQL statement for dropping a foreign key constraint.
+     * @return string The SQL statement for dropping a foreign key constraint.
+     *
+     * Note: The method will quote the `name` and `table` parameters before using them in the generated SQL.
      */
-    public function dropForeignKey(string $name, string $table): string;
+    public function dropForeignKey(string $table, string $name): string;
 
     /**
-     * Builds a SQL statement for dropping an index.
+     * Builds an SQL statement for dropping an index.
      *
-     * @param string $name the name of the index to be dropped. The name will be properly quoted by the method.
-     * @param string $table the table whose index is to be dropped. The name will be properly quoted by the method.
+     * @param string $table The table whose index is to drop.
+     * @param string $name The name of the index to drop.
      *
-     * @return string the SQL statement for dropping an index.
+     * @return string The SQL statement for dropping an index.
+     *
+     * Note: The method will quote the `name` and `table` parameters before using them in the generated SQL.
      */
-    public function dropIndex(string $name, string $table): string;
+    public function dropIndex(string $table, string $name): string;
 
     /**
-     * Builds a SQL statement for removing a primary key constraint to an existing table.
+     * Builds an SQL statement for removing a primary key constraint to an existing table.
      *
-     * @param string $name the name of the primary key constraint to be removed.
-     * @param string $table the table that the primary key constraint will be removed from.
+     * @param string $table The table to remove the primary key constraint from.
+     * @param string $name The name of the primary key constraint to remove.
      *
-     * @return string the SQL statement for removing a primary key constraint from an existing table.
+     * @return string The SQL statement for removing a primary key constraint from an existing table.
+     *
+     * Note: The method will quote the `name` and `table` parameters before using them in the generated SQL.
      */
-    public function dropPrimaryKey(string $name, string $table): string;
+    public function dropPrimaryKey(string $table, string $name): string;
 
     /**
-     * Builds a SQL statement for dropping a DB table.
+     * Builds an SQL statement for dropping a DB table.
      *
-     * @param string $table the table to be dropped. The name will be properly quoted by the method.
+     * @param string $table The table to drop.
      *
-     * @return string the SQL statement for dropping a DB table.
+     * @return string The SQL statement for dropping a DB table.
+     *
+     * Note: The method will quote the `table` parameter before using it in the generated SQL.
      */
     public function dropTable(string $table): string;
 
     /**
-     * Creates a SQL command for dropping a unique constraint.
+     * Creates an SQL command for dropping a unique constraint.
      *
-     * @param string $name the name of the unique constraint to be dropped. The name will be properly quoted by the
-     * method.
-     * @param string $table the table whose unique constraint is to be dropped. The name will be properly quoted by the
-     * method.
+     * @param string $table The table whose unique constraint is to drop.
+     * @param string $name The name of the unique constraint to drop.
      *
-     * @return string the SQL statement for dropping an unique constraint.
+     * @return string The SQL statement for dropping an unique constraint.
+     *
+     * Note: The method will quote the `name` and `table` parameters before using them in the generated SQL.
      */
-    public function dropUnique(string $name, string $table): string;
+    public function dropUnique(string $table, string $name): string;
 
     /**
-     * Drops a SQL View.
+     * Drops an SQL View.
      *
-     * @param string $viewName the name of the view to be dropped.
+     * @param string $viewName The name of the view to drop.
      *
-     * @return string the `DROP VIEW` SQL statement.
+     * @return string The `DROP VIEW` SQL statement.
+     *
+     * Note: The method will quote the `viewName` parameter before using it in the generated SQL.
      */
     public function dropView(string $viewName): string;
 
     /**
-     * Builds a SQL statement for renaming a column.
+     * Builds an SQL statement for renaming a column.
      *
-     * @param string $table the table whose column is to be renamed. The name will be properly quoted by the method.
-     * @param string $oldName the old name of the column. The name will be properly quoted by the method.
-     * @param string $newName the new name of the column. The name will be properly quoted by the method.
+     * @param string $table The table whose column is to rename.
+     * @param string $oldName The old name of the column.
+     * @param string $newName The new name of the column.
      *
-     * @return string the SQL statement for renaming a DB column.
+     * @return string The SQL statement for renaming a DB column.
+     *
+     * Note: The method will quote the `table`, `oldName` and `newName` parameters before using them in the generated
+     * SQL.
      */
     public function renameColumn(string $table, string $oldName, string $newName): string;
 
     /**
-     * Builds a SQL statement for renaming a DB table.
+     * Builds an SQL statement for renaming a DB table.
      *
-     * @param string $oldName the table to be renamed. The name will be properly quoted by the method.
-     * @param string $newName the new table name. The name will be properly quoted by the method.
+     * @param string $oldName The table to rename.
+     * @param string $newName The new table name.
      *
-     * @return string the SQL statement for renaming a DB table.
+     * @return string The SQL statement for renaming a DB table.
+     *
+     * Note: The method will quote the `oldName` and `newName` parameters before using them in the generated SQL.
      */
     public function renameTable(string $oldName, string $newName): string;
+
+    /**
+     * Builds an SQL statement for truncating a DB table.
+     *
+     * @param string $table The table to truncate.
+     *
+     * @return string The SQL statement for truncating a DB table.
+     *
+     * Note: The method will quote the `table` parameter before using it in the generated SQL.
+     */
+    public function truncateTable(string $table): string;
 }

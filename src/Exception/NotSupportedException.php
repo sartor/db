@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Yiisoft\Db\Exception;
 
 /**
- * NotSupportedException represents an exception caused by accessing features that are not supported.
+ * Represents an exception caused by accessing features that aren't supported by the underlying DBMS.
  */
-class NotSupportedException extends Exception
+final class NotSupportedException extends Exception
 {
 }

@@ -1,45 +1,58 @@
 {
     "name": "yiisoft/db",
     "type": "library",
-    "description": "Yii DataBase Library",
+    "description": "Yii Database",
     "keywords": [
         "yii",
-        "database"
+        "sql",
+        "database",
+        "query-builder",
+        "dbal"
     ],
     "homepage": "https://www.yiiframework.com/",
     "license": "BSD-3-Clause",
     "support": {
         "issues": "https://github.com/yiisoft/db/issues/issues?state=open",
+        "source": "https://github.com/yiisoft/db",
         "forum": "https://www.yiiframework.com/forum/",
         "wiki": "https://www.yiiframework.com/wiki/",
-        "irc": "irc://irc.freenode.net/yii",
-        "chat": "https://t.me/yii3en",
-        "source": "https://github.com/yiisoft/db"
+        "irc": "ircs://irc.libera.chat:6697/yii",
+        "chat": "https://t.me/yii3en"
     },
-    "minimum-stability": "dev",
-    "prefer-stable": true,
+    "funding": [
+        {
+            "type": "opencollective",
+            "url": "https://opencollective.com/yiisoft"
+        },
+        {
+            "type": "github",
+            "url": "https://github.com/sponsors/yiisoft"
+        }
+    ],
     "require": {
         "php": "^8.0",
+        "ext-ctype": "*",
         "ext-json": "*",
         "ext-mbstring": "*",
         "ext-pdo": "*",
         "psr/log": "^2.0|^3.0",
-        "yiisoft/arrays": "^2.0",
-        "yiisoft/cache": "^2.0",
-        "yiisoft/log": "^2.0",
-        "yiisoft/profiler": "^2.0",
-        "yiisoft/strings": "^2.0"
+        "psr/simple-cache": "^2.0|^3.0"
     },
     "require-dev": {
-        "phpunit/phpunit": "^9.5",
-        "rector/rector": "^0.14",
+        "maglnet/composer-require-checker": "^4.2",
+        "phpunit/phpunit": "^9.6|^10.0",
+        "rector/rector": "^1.1.1",
         "roave/infection-static-analysis-plugin": "^1.16",
         "spatie/phpunit-watcher": "^1.23",
-        "vimeo/psalm": "^4.18",
-        "yiisoft/aliases": "^1.1|^2.0",
+        "vimeo/psalm": "^4.30|^5.24",
+        "yiisoft/aliases": "^3.0",
+        "yiisoft/cache-file": "^3.1",
         "yiisoft/di": "^1.0",
         "yiisoft/event-dispatcher": "^1.0",
-        "yiisoft/json": "^1.0"
+        "yiisoft/json": "^1.0",
+        "yiisoft/log": "^2.0",
+        "yiisoft/var-dumper": "^1.5",
+        "yiisoft/yii-debug": "dev-master|dev-php80"
     },
     "autoload": {
         "psr-4": {
@@ -58,15 +71,19 @@
         }
     },
     "extra": {
-        "branch-alias": {
-            "dev-master": "3.0.x-dev"
+        "config-plugin-options": {
+            "source-directory": "config"
+        },
+        "config-plugin": {
+            "params": "params.php"
         }
     },
     "config": {
         "sort-packages": true,
         "allow-plugins": {
             "infection/extension-installer": true,
-            "composer/package-versions-deprecated": true
+            "composer/package-versions-deprecated": true,
+            "yiisoft/config": false
         }
     },
     "scripts": {

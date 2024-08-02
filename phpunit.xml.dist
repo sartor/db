@@ -1,39 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" backupGlobals="false" colors="true" verbose="true" bootstrap="vendor/autoload.php" executionOrder="default" failOnRisky="true" failOnWarning="true" xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.3/phpunit.xsd">
-  <coverage>
-    <include>
-      <directory>./</directory>
-    </include>
-    <exclude>
-      <directory>./src/TestSupport</directory>
-      <directory>./tests</directory>
-      <directory>./vendor</directory>
-    </exclude>
-  </coverage>
-  <php>
-    <ini name="error_reporting" value="-1"/>
-  </php>
-  <testsuites>
-    <testsuite name="db">
-      <directory>./tests</directory>
-    </testsuite>
-    <testsuite name="ActiveRecord">
-      <directory>./vendor/yiisoft/active-record/tests</directory>
-    </testsuite>
-    <testsuite name="Mssql">
-      <directory>./vendor/yiisoft/db-mssql/tests</directory>
-    </testsuite>
-    <testsuite name="Mysql">
-      <directory>./vendor/yiisoft/db-mysql/tests</directory>
-    </testsuite>
-    <testsuite name="Oracle">
-      <directory>./vendor/yiisoft/db-oracle/tests</directory>
-    </testsuite>
-    <testsuite name="Pgsql">
-      <directory>./vendor/yiisoft/db-pgsql/tests</directory>
-    </testsuite>
-    <testsuite name="Sqlite">
-      <directory>./vendor/yiisoft/db-sqlite/tests</directory>
-    </testsuite>
-  </testsuites>
+<phpunit
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    backupGlobals="false"
+    colors="true"
+    bootstrap="vendor/autoload.php"
+    executionOrder="default"
+    failOnRisky="true"
+    failOnWarning="true"
+    xsi:noNamespaceSchemaLocation="http://schema.phpunit.de/10.2/phpunit.xsd"
+>
+    <source>
+        <include>
+            <directory>./src</directory>
+        </include>
+        <exclude>
+            <directory>./src/TestSupport</directory>
+            <directory>./src/Debug</directory>
+            <directory>./tests</directory>
+            <directory>./vendor</directory>
+        </exclude>
+    </source>
+    <php>
+        <ini name="error_reporting" value="-1"/>
+    </php>
+    <testsuites>
+        <testsuite name="Db">
+            <directory>./tests/Db</directory>
+        </testsuite>
+        <testsuite name="ActiveRecord">
+            <directory>./vendor/yiisoft/active-record/tests/Driver</directory>
+        </testsuite>
+        <testsuite name="Mssql">
+            <directory>./vendor/yiisoft/db-mssql/tests</directory>
+        </testsuite>
+        <testsuite name="Mysql">
+            <directory>./vendor/yiisoft/db-mysql/tests</directory>
+        </testsuite>
+        <testsuite name="Oracle">
+            <directory>./vendor/yiisoft/db-oracle/tests</directory>
+        </testsuite>
+        <testsuite name="Pgsql">
+            <directory>./vendor/yiisoft/db-pgsql/tests</directory>
+        </testsuite>
+        <testsuite name="Sqlite">
+            <directory>./vendor/yiisoft/db-sqlite/tests</directory>
+        </testsuite>
+    </testsuites>
 </phpunit>
