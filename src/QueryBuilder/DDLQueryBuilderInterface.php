@@ -209,8 +209,8 @@ interface DDLQueryBuilderInterface
         string $table,
         string $name,
         array|string $columns,
-        string $indexType = null,
-        string $indexMethod = null
+        ?string $indexType = null,
+        ?string $indexMethod = null
     ): string;
 
     /**
@@ -239,7 +239,7 @@ interface DDLQueryBuilderInterface
      *
      * Note: The method will quote the `table` and `columns` parameter before using it in the generated SQL.
      */
-    public function createTable(string $table, array $columns, string $options = null): string;
+    public function createTable(string $table, array $columns, ?string $options = null): string;
 
     /**
      * Creates an SQL View.

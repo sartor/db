@@ -17,7 +17,7 @@ use Yiisoft\Db\Schema\TableSchemaInterface;
  */
 class Schema extends AbstractSchema
 {
-    public function createColumn(string $type, array|int|string $length = null): ColumnInterface
+    public function createColumn(string $type, null|array|int|string $length = null): ColumnInterface
     {
         return new Column($type, $length);
     }
@@ -30,7 +30,7 @@ class Schema extends AbstractSchema
     /**
      * @throws NotSupportedException
      */
-    public function getLastInsertID(string $sequenceName = null): string
+    public function getLastInsertID(?string $sequenceName = null): string
     {
         throw new NotSupportedException(__METHOD__ . ' is not supported by this DBMS.');
     }

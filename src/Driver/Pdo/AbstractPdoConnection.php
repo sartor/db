@@ -78,7 +78,7 @@ abstract class AbstractPdoConnection extends AbstractConnection implements PdoCo
         return array_keys($fields);
     }
 
-    public function beginTransaction(string $isolationLevel = null): TransactionInterface
+    public function beginTransaction(?string $isolationLevel = null): TransactionInterface
     {
         $transaction = parent::beginTransaction($isolationLevel);
         if ($this->logger !== null && $transaction instanceof LoggerAwareInterface) {
@@ -155,7 +155,7 @@ abstract class AbstractPdoConnection extends AbstractConnection implements PdoCo
         return $this->pdo;
     }
 
-    public function getLastInsertID(string $sequenceName = null): string
+    public function getLastInsertID(?string $sequenceName = null): string
     {
         if ($this->pdo !== null) {
             return $this->pdo->lastInsertID($sequenceName ?? null);

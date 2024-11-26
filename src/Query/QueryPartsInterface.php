@@ -528,7 +528,7 @@ interface QueryPartsInterface
      * @param string|null $option More option that should be appended to the 'SELECT' keyword. For example, in MySQL,
      * the option 'SQL_CALC_FOUND_ROWS' can be used.
      */
-    public function select(array|string|ExpressionInterface $columns, string $option = null): static;
+    public function select(array|string|ExpressionInterface $columns, ?string $option = null): static;
 
     /**
      * It allows you to specify more options for the `SELECT` clause of an SQL statement.

@@ -612,7 +612,7 @@ class Query implements QueryInterface
         };
     }
 
-    public function select(array|string|ExpressionInterface $columns, string $option = null): static
+    public function select(array|string|ExpressionInterface $columns, ?string $option = null): static
     {
         $this->select = $this->normalizeSelect($columns);
         $this->selectOption = $option;

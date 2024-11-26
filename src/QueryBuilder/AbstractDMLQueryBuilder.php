@@ -470,7 +470,7 @@ abstract class AbstractDMLQueryBuilder implements DMLQueryBuilderInterface
      *
      * @deprecated will be removed in version 2.0.0
      */
-    protected function getTypecastValue(mixed $value, ColumnSchemaInterface $columnSchema = null): mixed
+    protected function getTypecastValue(mixed $value, ?ColumnSchemaInterface $columnSchema = null): mixed
     {
         if ($columnSchema) {
             return $columnSchema->dbTypecast($value);

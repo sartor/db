@@ -257,7 +257,7 @@ interface SchemaInterface extends ConstraintSchemaInterface
     /**
      * @psalm-param string[]|int[]|int|string|null $length
      */
-    public function createColumn(string $type, array|int|string $length = null): ColumnInterface;
+    public function createColumn(string $type, null|array|int|string $length = null): ColumnInterface;
 
     /**
      * @return string|null The default schema name.
